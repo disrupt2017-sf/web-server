@@ -9,7 +9,6 @@ function getGeoCoordinates(location, callback) {
       console.log(err);
       return callback(err);
     }
-    console.log(res.body);
     var resJson = JSON.parse(res.body);
     return callback(null, resJson.results[0].locations[0].latLng);
   })

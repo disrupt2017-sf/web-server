@@ -1,8 +1,6 @@
 var request = require('request');
 
 function curlToHashgraph(message, callback) {
-  console.log('writing');
-  console.log(message);
   if(message === null){
     request.post({
       uri: 'http://localhost:9111',

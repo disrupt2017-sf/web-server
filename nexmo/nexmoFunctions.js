@@ -1,7 +1,6 @@
 var request = require('request');
 
 function sendSMSToNexmo(message, callback) {
-  console.log('sending sms');
   var formData = {
     api_key: process.env.NEXMO_API_KEY,
     api_secret: process.env.NEXMO_API_SECRET,
@@ -18,7 +17,6 @@ function sendSMSToNexmo(message, callback) {
       console.log(err);
       callback(err);
     }
-    console.log(res);
     callback(null, res);
   });
 }
