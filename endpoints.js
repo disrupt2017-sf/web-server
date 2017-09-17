@@ -14,67 +14,115 @@ function sendSMS (req, res) {
 }
 
 function receiveSMS (req, res) {
+  console.log(currentSessions);
   var personId = req.body.msisdn;
   var timestamp = req.body['message-timestamp'];
   var personSession = currentSessions[personId] !== undefined ? currentSessions[personId] : { personId: personId, sessionId: nextSession };
-  console.log(req.body);
   if(req.body.text === undefined){
     res.send(200).send();
   } else {
-    AIParse(req.body.text, personSession.sessionId, function(err, aiRes){
-      if(err){
-        console.log(err);
-        res.status(200).send(err);
-      } else {
-        console.log('aiRes: ');
-        console.log(aiRes);
-        // send SMS response
-        var aiResMessage = aiRes.result.fulfillment.speech != undefined ? aiRes.result.fulfillment.speech : 'Okay we should have someone to assist you shortly';
-        if(aiRes.result.parameters != undefined && (aiRes.result.parameters.location != undefined || (aiRes.result.parameters['geo-city'] != '' && aiRes.result.parameters['geo-city'] != undefined) || (aiRes.result.parameters.imperilled != undefined && aiRes.result.parameters.imperilled == ''))) {
-          console.log('writing to hashgraph');
-          var locationString = aiRes.result.resolvedQuery.replace(' ', '+');
-          var crisis = determineCrisis(aiRes.result.resolvedQuery);
-          getCoordinates(locationString, function(err, coords){
-            if(err){
-              res.status(200).send(err);
-            }
-            var hashgraphData = {
-              phoneNumber: personId,
-              latitude: coords.lat,
-              longitude: coords.lng,
-              type: 'person',
-              crisis: crisis,
-              startTime: timestamp,
-              status: 'open',
-            };
-            var dataString = JSON.stringify(hashgraphData);
-            hashgraph.curlToHashgraph(`${dataString},`, function(err, resHash){
-              if(err){
-                res.status(200).send(err);
-              }
-              nexmoFunctions.sendSMSToNexmo(aiResMessage, personId, function(err, result){
-                if(err){
-                  console.log(err);
-                  res.status(200).send(err);
-                } else {
-                  res.status(200).send('done');
-                }
-              });
-            })
-          });
-        } else {
-          console.log('nothing written');
-          nexmoFunctions.sendSMSToNexmo(aiResMessage, personId, function(err, result){
+    if(req.body.text.match(/^\d+\w*\s*(?:[\-\/]?\s*)?\d*\s*\d+\/?\s*\d*\s*/) !== null){
+      var local = req.body.text.replace(' ', '+');
+      getCoordinates(local, function(err, coords){
+        if(err){
+          res.status(200).send(err);
+        }
+        var hashgraphData = {
+          phoneNumber: personId,
+          latitude: coords.lat,
+          longitude: coords.lng,
+          type: 'person',
+          crisis: personSession.crisis,
+          startTime: timestamp,
+          status: 'open',
+        };
+        console.log('new data');
+        console.log(hashgraphData);
+        var dataString = JSON.stringify(hashgraphData);
+        hashgraph.curlToHashgraph(`${dataString},`, function(err, resHash){
+          if(err){
+            res.status(200).send(err);
+          }
+          delete currentSessions[personId];
+          nexmoFunctions.sendSMSToNexmo('Thanks for the info! We have someone on their way!', personId, function(err, result){
             if(err){
               console.log(err);
               res.status(200).send(err);
             } else {
+              
               res.status(200).send('done');
             }
           });
+        })
+      })
+    } else {
+      AIParse(req.body.text, personSession.sessionId, function(err, aiRes){
+        if(err){
+          console.log(err);
+          res.status(200).send(err);
+        } else {
+          // send SMS response
+          if(aiRes.result.parameters != undefined && aiRes.result.parameters.fire != undefined){
+            console.log('crisis is:');
+            var crisis = determineCrisis(aiRes.result.resolvedQuery);
+            console.log('result is');
+            console.log(crisis);
+            if(personSession.crisis == undefined){
+              personSession.crisis = crisis;
+            }
+          }
+          var aiResMessage = aiRes.result.fulfillment.speech != undefined ? aiRes.result.fulfillment.speech : 'Okay we should have someone to assist you shortly';
+          if(aiRes.result.parameters != undefined && (aiRes.result.parameters.location != undefined || (aiRes.result.parameters['geo-city'] != '' && aiRes.result.parameters['geo-city'] != undefined) || (aiRes.result.parameters.imperilled != undefined && aiRes.result.parameters.imperilled == ''))) {
+            console.log('writing to hashgraph');
+            var locationString = aiRes.result.resolvedQuery.replace(' ', '+');
+            console.log(aiRes.result);
+            getCoordinates(locationString, function(err, coords){
+              if(err){
+                res.status(200).send(err);
+              }
+              var hashgraphData = {
+                phoneNumber: personId,
+                latitude: coords.lat,
+                longitude: coords.lng,
+                type: 'person',
+                crisis: personSession.crisis,
+                startTime: timestamp,
+                status: 'open',
+              };
+              console.log('new data');
+              console.log(hashgraphData);
+              var dataString = JSON.stringify(hashgraphData);
+              hashgraph.curlToHashgraph(`${dataString},`, function(err, resHash){
+                if(err){
+                  res.status(200).send(err);
+                }
+                delete currentSessions[personId];
+                nexmoFunctions.sendSMSToNexmo(aiResMessage, personId, function(err, result){
+                  if(err){
+                    console.log(err);
+                    res.status(200).send(err);
+                  } else {
+                    
+                    res.status(200).send('done');
+                  }
+                });
+              })
+            });
+          } else {
+            console.log('nothing written');
+            currentSessions[personId] = personSession;
+            nexmoFunctions.sendSMSToNexmo(aiResMessage, personId, function(err, result){
+              if(err){
+                console.log(err);
+                res.status(200).send(err);
+              } else {
+                res.status(200).send('done');
+              }
+            });
+          }
         }
-      }
-    })
+      })
+    }
   }
 }
 
@@ -96,7 +144,6 @@ function getHashgraphData(req, res) {
     }
     var final = result.body.replace(/\r?\n|\r/g, '');
     final = final.substring(0, final.length-1);
-    console.log(final);
     res.send(`[${final}]`);
   });
 }
@@ -112,10 +159,16 @@ function writeToHashgraph(req, res) {
   });
 }
 
+function confirmSMS(req, res) {
+  console.log('nice');
+  res.status(200).json(result);
+}
+
 module.exports = {
   sendSMS,
   receiveSMS,
   geoCode,
   getHashgraphData,
   writeToHashgraph,
+  confirmSMS,
 }
