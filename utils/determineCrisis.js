@@ -8,6 +8,10 @@ function determineCrisis(string) {
     return 'flood';
   } else if(string.indexOf('earthquake') > -1){
     return 'earthquake';
+  } else if(string.indexOf('hospital') > -1){
+    return 'hospital';
+  } else {
+    return null;
   }
 }
 
