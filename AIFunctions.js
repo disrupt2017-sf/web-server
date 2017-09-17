@@ -3,7 +3,8 @@ var apiai = require('apiai');
 var app = apiai('33ea78ce776e47a3be419e8cb7956f27');
 
 function AIParse(message, callback) {
-  var request = app.textRequest('Test me', {
+  console.log('testing message:', message)
+  var request = app.textRequest(message, {
     sessionId: '1'
   });
 

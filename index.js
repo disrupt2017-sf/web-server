@@ -5,10 +5,11 @@ var endpoints = require('./endpoints');
 var bodyParser = require('body-parser');
 var net = require('net');
 var ioc = require('socket.io-client');
+var nexmoFunctions = require('./nexmo/nexmoFunctions');
 
 require('dotenv').config();
 
-var socket = ioc('http://localhost:9111');
+// var socket = ioc('http://localhost:9111');
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -31,19 +32,27 @@ app.get('/receiveSMS', endpoints.receiveSMS);
 //   });
 // });
 
-socket.on('connect', function(){
-  console.log('Socket connected');
-});
+// socket.on('connect', function(){
+//   console.log('Socket connected');
+// });
 
-socket.on('event', function(data){
-  console.log('something showed up');
-  console.log(data);
-});
+// socket.on('event', function(data){
+//   console.log('something showed up');
+//   console.log(data);
+// });
 
-socket.on('disconnect', function(){
-  console.log('socket disconnected');
-})
+// socket.on('disconnect', function(){
+//   console.log('socket disconnected');
+// })
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
+  console.log('curl ');
+  nexmoFunctions.curlToHashgraph('something', function(err, res){
+    if(err){
+      console.log('some err', err);
+    }
+    console.log('done')
+    console.log(res.body);
+  });
 });

@@ -7,7 +7,7 @@ function sendSMSToNexmo(message, callback) {
     api_secret: process.env.NEXMO_API_SECRET,
     to: '16177687993',
     from: process.env.NEXMO_FROM,
-    text: 'Hello from Nexmo'
+    text: message
   };
 
   request.post({
@@ -23,6 +23,19 @@ function sendSMSToNexmo(message, callback) {
   });
 }
 
+function curlToHashgraph(message, callback) {
+  request.post({
+    uri: 'http://localhost:9111',
+    form: 'some data',
+  }, function(err, res){
+    if(err) {
+      callback(err);
+    }
+    callback(null, res);
+  })
+}
+
 module.exports = {
   sendSMSToNexmo,
+  curlToHashgraph,
 }
