@@ -1,4 +1,5 @@
 var nexmoFunctions = require('./nexmo/nexmoFunctions');
+var AIParse = require('./AIFunctions');
 
 function sendSMS (req, res) {
   nexmoFunctions.sendSMSToNexmo('something', function(){
@@ -10,7 +11,10 @@ function sendSMS (req, res) {
 function receiveSMS (req, res) {
   console.log('i got hit');
   console.log(req.body);
-  res.status(200).send();
+  AIParse(req.body.text, function(err, aiRes){
+    console.log(aiRes);
+    res.status(200).send();
+  })
 }
 
 module.exports = {
