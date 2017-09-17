@@ -7,6 +7,13 @@ function sendSMS (req, res) {
   })
 }
 
+function receiveSMS (req, res) {
+  console.log('i got hit');
+  console.log(req.body);
+  res.status(200).send();
+}
+
 module.exports = {
   sendSMS,
+  receiveSMS,
 }
