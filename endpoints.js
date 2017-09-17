@@ -29,42 +29,50 @@ function receiveSMS (req, res) {
         console.log('aiRes: ');
         console.log(aiRes);
         // send SMS response
-        nexmoFunctions.sendSMSToNexmo(aiRes.result.fulfillment.speech, function(err, result){
-          if(err){
-            console.log(err);
-            res.status(200).send(err);
-          } else {
-            if(aiRes.result.parameters.location != undefined || (aiRes.result.parameters['geo-city'] != '' && aiRes.result.parameters['geo-city'] != undefined) || (aiRes.result.parameters.imperilled != undefined && aiRes.result.parameters.imperilled == '')) {
-              console.log('writing to hashgraph');
-              var locationString = aiRes.result.resolvedQuery.replace(' ', '+');
-              var crisis = determineCrisis(aiRes.result.resolvedQuery);
-              getCoordinates(locationString, function(err, coords){
+        var aiResMessage = aiRes.result.fulfillment.speech != undefined ? aiRes.result.fulfillment.speech : 'Okay we should have someone to assist you shortly';
+        if(aiRes.result.parameters != undefined && (aiRes.result.parameters.location != undefined || (aiRes.result.parameters['geo-city'] != '' && aiRes.result.parameters['geo-city'] != undefined) || (aiRes.result.parameters.imperilled != undefined && aiRes.result.parameters.imperilled == ''))) {
+          console.log('writing to hashgraph');
+          var locationString = aiRes.result.resolvedQuery.replace(' ', '+');
+          var crisis = determineCrisis(aiRes.result.resolvedQuery);
+          getCoordinates(locationString, function(err, coords){
+            if(err){
+              res.status(200).send(err);
+            }
+            var hashgraphData = {
+              phoneNumber: personId,
+              latitude: coords.lat,
+              longitude: coords.lng,
+              type: 'person',
+              crisis: crisis,
+              startTime: timestamp,
+              status: 'open',
+            };
+            var dataString = JSON.stringify(hashgraphData);
+            hashgraph.curlToHashgraph(`${dataString},`, function(err, resHash){
+              if(err){
+                res.status(200).send(err);
+              }
+              nexmoFunctions.sendSMSToNexmo(aiResMessage, personId, function(err, result){
                 if(err){
+                  console.log(err);
                   res.status(200).send(err);
-                }
-                var hashgraphData = {
-                  phoneNumber: personId,
-                  latitude: coords.lat,
-                  longitude: coords.lng,
-                  type: 'person',
-                  crisis: crisis,
-                  startTime: timestamp,
-                  status: 'open',
-                };
-                var dataString = JSON.stringify(hashgraphData);
-                hashgraph.curlToHashgraph(`${dataString},`, function(err, resHash){
-                  if(err){
-                    res.status(200).send(err);
-                  }
+                } else {
                   res.status(200).send('done');
-                })
+                }
               });
+            })
+          });
+        } else {
+          console.log('nothing written');
+          nexmoFunctions.sendSMSToNexmo(aiResMessage, personId, function(err, result){
+            if(err){
+              console.log(err);
+              res.status(200).send(err);
             } else {
-              console.log('nothing written');
               res.status(200).send('done');
             }
-          }
-        });
+          });
+        }
       }
     })
   }

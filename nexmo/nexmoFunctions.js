@@ -1,10 +1,10 @@
 var request = require('request');
 
-function sendSMSToNexmo(message, callback) {
+function sendSMSToNexmo(message, number, callback) {
   var formData = {
     api_key: process.env.NEXMO_API_KEY,
     api_secret: process.env.NEXMO_API_SECRET,
-    to: '16177687993',
+    to: number,
     from: process.env.NEXMO_FROM,
     text: message
   };
