@@ -26,6 +26,10 @@ app.get('/sendSMS', endpoints.sendSMS);
 app.post('/receiveSMS', endpoints.receiveSMS);
 app.get('/receiveSMS', endpoints.receiveSMS);
 
+app.post('/geocode', endpoints.geoCode);
+
+// app.get('/hashgraphData', endpoints)
+
 // io.on('connection', function(socket){
 //   socket.on('chat message', function(msg){
 //     io.emit('chat message', msg);
