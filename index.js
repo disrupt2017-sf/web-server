@@ -1,15 +1,9 @@
 var app = require('express')();
 var http = require('http').Server(app);
-var io = require('socket.io')(http);
 var endpoints = require('./endpoints');
 var bodyParser = require('body-parser');
-var net = require('net');
-var ioc = require('socket.io-client');
-var nexmoFunctions = require('./nexmo/nexmoFunctions');
 
 require('dotenv').config();
-
-// var socket = ioc('http://localhost:9111');
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -28,35 +22,9 @@ app.get('/receiveSMS', endpoints.receiveSMS);
 
 app.post('/geocode', endpoints.geoCode);
 
-// app.get('/hashgraphData', endpoints)
-
-// io.on('connection', function(socket){
-//   socket.on('chat message', function(msg){
-//     io.emit('chat message', msg);
-//   });
-// });
-
-// socket.on('connect', function(){
-//   console.log('Socket connected');
-// });
-
-// socket.on('event', function(data){
-//   console.log('something showed up');
-//   console.log(data);
-// });
-
-// socket.on('disconnect', function(){
-//   console.log('socket disconnected');
-// })
+app.get('/hashgraphData', endpoints.getHashgraphData);
+app.post('/hashgraphData', endpoints.writeToHashgraph);
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
-  console.log('curl ');
-  nexmoFunctions.curlToHashgraph('something', function(err, res){
-    if(err){
-      console.log('some err', err);
-    }
-    console.log('done')
-    console.log(res.body);
-  });
 });

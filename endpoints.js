@@ -1,6 +1,7 @@
 var nexmoFunctions = require('./nexmo/nexmoFunctions');
 var AIParse = require('./AIFunctions');
 var getCoordinates = require('./mapquestFunctions');
+var hashgraph = require('./hashgraphFunctions');
 
 var currentSessions = {};
 var nextSession = 0;
@@ -54,8 +55,33 @@ function geoCode(req, res) {
   });
 }
 
+function getHashgraphData(req, res) {
+  hashgraph.curlToHashgraph(null, function(err, result){
+    if(err){
+      console.log('some err', err);
+    }
+    console.log('done')
+    console.log(res.body);
+    res.json(result);
+  });
+}
+
+function writeToHashgraph(req, res) {
+  console.log('data written', req.body.data);
+  hashgraph.curlToHashgraph(req.body.data, function(err, result){
+    if(err){
+      console.log('some err', err);
+    }
+    console.log('done')
+    console.log(res.body);
+    res.json(result);
+  });
+}
+
 module.exports = {
   sendSMS,
   receiveSMS,
   geoCode,
+  getHashgraphData,
+  writeToHashgraph,
 }
