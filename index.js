@@ -31,8 +31,10 @@ app.post('/geocode', endpoints.geoCode);
 app.get('/hashgraphData', endpoints.getHashgraphData);
 app.post('/hashgraphData', endpoints.writeToHashgraph);
 
+app.post('/getSafeAlerts', endpoints.getSafeAlerts);
+
 http.listen(3030, function(){
-  console.log('listening on *:3000');
+  console.log('listening on *:3030');
 });
 
 // io.on('connection', function(socket){

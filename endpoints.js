@@ -4,6 +4,7 @@ var getCoordinates = require('./mapquestFunctions');
 var hashgraph = require('./hashgraphFunctions');
 var getCoordinates = require('./mapquestFunctions');
 var determineCrisis = require('./utils/determineCrisis');
+var getAritySafeAlerts = require('./arityFunctions');
 var currentSessions = {};
 var nextSession = 0;
 
@@ -164,6 +165,13 @@ function confirmSMS(req, res) {
   res.status(200).json(result);
 }
 
+function getSafeAlerts(req, res){
+  getAritySafeAlerts(req.body.lat, req.body.lng, 0.001, function(err, result){
+    console.log(result);
+    res.send(result);
+  })
+}
+
 module.exports = {
   sendSMS,
   receiveSMS,
@@ -171,4 +179,5 @@ module.exports = {
   getHashgraphData,
   writeToHashgraph,
   confirmSMS,
+  getSafeAlerts,
 }

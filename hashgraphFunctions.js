@@ -1,9 +1,10 @@
 var request = require('request');
 
+var endpoint = 'http://localhost:9112'
 function curlToHashgraph(message, callback) {
   if(message === null){
     request.post({
-      uri: 'http://localhost:9111',
+      uri: endpoint,
     }, function(err, res){
       if(err) {
         callback(err);
@@ -12,7 +13,7 @@ function curlToHashgraph(message, callback) {
     });
   } else {
     request.post({
-      uri: 'http://localhost:9111',
+      uri: endpoint,
       form: message,
     }, function(err, res){
       if(err) {
